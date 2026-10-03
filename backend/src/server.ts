@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import { connectDB } from "./config/db";
 
 dotenv.config();
 
@@ -17,6 +18,12 @@ app.get("/health", (_req, res) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`TaskFlow API running on port ${PORT}`);
-});
+const startServer = async (): Promise<void> => {
+  await connectDB();
+
+  app.listen(PORT, () => {
+    console.log(`TaskFlow API running on port ${PORT}`);
+  });
+};
+
+startServer();
