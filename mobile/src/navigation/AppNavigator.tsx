@@ -12,13 +12,15 @@ import {
 
 import LoginScreen from "../screens/LoginScreen";
 import RegisterScreen from "../screens/RegisterScreen";
-import HomeScreen from "../screens/HomeScreen";
 import { useAuth } from "../store/AuthContext";
+import TaskListScreen from "../screens/TaskListScreen";
+import CreateTaskScreen from "../screens/CreateTaskScreen";
 
 export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
   Home: undefined;
+  CreateTask: undefined;
 };
 
 const Stack =
@@ -45,13 +47,22 @@ const AppNavigator = () => {
     <NavigationContainer>
       <Stack.Navigator>
         {user ? (
-          <Stack.Screen
-            name="Home"
-            component={HomeScreen}
-            options={{
-              title: "TaskFlow",
-            }}
-          />
+          <>
+            <Stack.Screen
+              name="Home"
+              component={TaskListScreen}
+              options={{
+                title: "TaskFlow",
+              }}
+            />
+            <Stack.Screen
+              name="CreateTask"
+              component={CreateTaskScreen}
+              options={{
+                title: "Create Task",
+              }}
+            />
+          </>
         ) : (
           <>
             <Stack.Screen

@@ -54,3 +54,104 @@ export const getMe = async (token: string) => {
 
   return response.data;
 };
+
+export type TaskPriority = "low" | "medium" | "high";
+
+export interface Task {
+  _id: string;
+  userId: string;
+  title: string;
+  description?: string;
+  scheduledAt?: string;
+  deadline?: string;
+  priority: TaskPriority;
+  category?: string;
+  completed: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface TasksResponse {
+  success: boolean;
+  data: {
+    tasks: Task[];
+    count: number;
+  };
+}
+
+interface TaskResponse {
+  success: boolean;
+  message: string;
+  data: {
+    task: Task;
+  };
+}
+
+export const getTasks = async (
+  token: string
+): Promise<TasksResponse> => {
+  const response = await api.get<TasksResponse>("/tasks", {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return response.data;
+};
+
+export const createTask = async (
+  token: string,
+  task: {
+    title: string;
+    description?: string;
+    scheduledAt?: string;
+    deadline?: string;
+    priority?: TaskPriority;
+    category?: string;
+  }
+): Promise<TaskResponse> => {
+  const response = await api.post<TaskResponse>(
+    "/tasks",
+    task,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  return response.data;
+};
+
+export const toggleTaskComplete = async (
+  token: string,
+  taskId: string
+): Promise<TaskResponse> => {
+  const response = await api.patch<TaskResponse>(
+    `/tasks/${taskId}/complete`,
+    {},
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  return response.data;
+};
+
+export const deleteTask = async (
+  token: string,
+  taskId: string
+) => {
+  const response = await api.delete(
+    `/tasks/${taskId}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  return response.data;
+};
