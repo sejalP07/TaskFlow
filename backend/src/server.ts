@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import { connectDB } from "./config/db";
+import authRoutes from "./routes/authRoutes";
 
 dotenv.config();
 
@@ -17,6 +18,8 @@ app.get("/health", (_req, res) => {
     message: "TaskFlow API is running",
   });
 });
+
+app.use("/api/auth", authRoutes);
 
 const startServer = async (): Promise<void> => {
   await connectDB();
