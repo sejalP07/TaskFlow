@@ -140,100 +140,103 @@ const TaskListScreen = () => {
       ]
     );
   };
-
   const renderTask = ({
     item,
-  }: {
+    }: {
     item: Task;
-  }) => {
+    }) => {
     return (
-      <TouchableOpacity
-  style={styles.taskCard}
-  activeOpacity={0.8}
-  onPress={() =>
-    navigation.navigate("EditTask", {
-      taskId: item._id,
-      title: item.title,
-      description: item.description,
-      scheduledAt: item.scheduledAt,
-      deadline: item.deadline,
-      priority: item.priority,
-      category: item.category,
-    })
-  }
->
+        <View style={styles.taskCard}>
         <View style={styles.taskHeader}>
-          <TouchableOpacity
+            <TouchableOpacity
             style={[
-              styles.checkbox,
-              item.completed &&
-                styles.checkboxCompleted,
+                styles.checkbox,
+                item.completed && styles.checkboxCompleted,
             ]}
-            onPress={() =>
-              handleToggleComplete(item)
-            }
-          >
-            {item.completed && (
-              <Text style={styles.checkmark}>✓</Text>
-            )}
-          </TouchableOpacity>
-
-          <View style={styles.taskContent}>
-            <Text
-              style={[
-                styles.taskTitle,
-                item.completed &&
-                  styles.completedText,
-              ]}
+            onPress={() => handleToggleComplete(item)}
             >
-              {item.title}
+            {item.completed && (
+                <Text style={styles.checkmark}>✓</Text>
+            )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+            style={styles.taskContent}
+            activeOpacity={0.7}
+            onPress={() =>
+                navigation.navigate("EditTask", {
+                taskId: item._id,
+                title: item.title,
+                description: item.description,
+                scheduledAt: item.scheduledAt,
+                deadline: item.deadline,
+                priority: item.priority,
+                category: item.category,
+                })
+            }
+            >
+            <Text
+                style={[
+                styles.taskTitle,
+                item.completed && styles.completedText,
+                ]}
+            >
+                {item.title}
             </Text>
 
             {item.description ? (
-              <Text
+                <Text
                 style={[
-                  styles.description,
-                  item.completed &&
-                    styles.completedText,
+                    styles.description,
+                    item.completed && styles.completedText,
                 ]}
-              >
+                >
                 {item.description}
-              </Text>
+                </Text>
             ) : null}
-          </View>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            onPress={() => handleDelete(item)}
-          >
-            <Text style={styles.deleteText}>
-              Delete
-            </Text>
-          </TouchableOpacity>
+            <TouchableOpacity onPress={() => handleDelete(item)}>
+            <Text style={styles.deleteText}>Delete</Text>
+            </TouchableOpacity>
         </View>
 
-        <View style={styles.metaRow}>
-          <Text style={styles.priority}>
-            {item.priority.toUpperCase()}
-          </Text>
-
-          {item.category ? (
-            <Text style={styles.category}>
-              {item.category}
+        <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() =>
+            navigation.navigate("EditTask", {
+                taskId: item._id,
+                title: item.title,
+                description: item.description,
+                scheduledAt: item.scheduledAt,
+                deadline: item.deadline,
+                priority: item.priority,
+                category: item.category,
+            })
+            }
+        >
+            <View style={styles.metaRow}>
+            <Text style={styles.priority}>
+                {item.priority.toUpperCase()}
             </Text>
-          ) : null}
-        </View>
 
-        {item.deadline ? (
-          <Text style={styles.deadline}>
-            Deadline:{" "}
-            {new Date(
-              item.deadline
-            ).toLocaleString()}
-          </Text>
-        ) : null}
-      </TouchableOpacity>
+            {item.category ? (
+                <Text style={styles.category}>
+                {item.category}
+                </Text>
+            ) : null}
+            </View>
+
+            {item.deadline ? (
+            <Text style={styles.deadline}>
+                Deadline:{" "}
+                {new Date(item.deadline).toLocaleString()}
+            </Text>
+            ) : null}
+        </TouchableOpacity>
+        </View>
     );
-  };
+    };
 
   if (loading) {
     return (
