@@ -12,9 +12,10 @@ import {
 import { useFocusEffect } from "@react-navigation/native";
 import { useAuth } from "../store/AuthContext";
 import {
+  Task,
+  TaskPriority,
   deleteTask,
   getTasks,
-  Task,
   toggleTaskComplete,
 } from "../services/api";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -24,6 +25,15 @@ type RootStackParamList = {
   Register: undefined;
   Home: undefined;
   CreateTask: undefined;
+  EditTask: {
+    taskId: string;
+    title: string;
+    description?: string;
+    scheduledAt?: string;
+    deadline?: string;
+    priority: TaskPriority;
+    category?: string;
+  };
 };
 const TaskListScreen = () => {
   const { token, logout } = useAuth();
@@ -137,7 +147,21 @@ const TaskListScreen = () => {
     item: Task;
   }) => {
     return (
-      <View style={styles.taskCard}>
+      <TouchableOpacity
+  style={styles.taskCard}
+  activeOpacity={0.8}
+  onPress={() =>
+    navigation.navigate("EditTask", {
+      taskId: item._id,
+      title: item.title,
+      description: item.description,
+      scheduledAt: item.scheduledAt,
+      deadline: item.deadline,
+      priority: item.priority,
+      category: item.category,
+    })
+  }
+>
         <View style={styles.taskHeader}>
           <TouchableOpacity
             style={[
@@ -207,7 +231,7 @@ const TaskListScreen = () => {
             ).toLocaleString()}
           </Text>
         ) : null}
-      </View>
+      </TouchableOpacity>
     );
   };
 

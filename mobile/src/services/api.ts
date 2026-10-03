@@ -155,3 +155,28 @@ export const deleteTask = async (
 
   return response.data;
 };
+export const updateTask = async (
+  token: string,
+  taskId: string,
+  task: {
+    title?: string;
+    description?: string;
+    scheduledAt?: string;
+    deadline?: string;
+    priority?: TaskPriority;
+    category?: string;
+    completed?: boolean;
+  }
+): Promise<TaskResponse> => {
+  const response = await api.put<TaskResponse>(
+    `/tasks/${taskId}`,
+    task,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  return response.data;
+};

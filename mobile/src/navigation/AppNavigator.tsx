@@ -10,17 +10,29 @@ import {
   createNativeStackNavigator,
 } from "@react-navigation/native-stack";
 
+
+import { TaskPriority } from "../services/api";
 import LoginScreen from "../screens/LoginScreen";
 import RegisterScreen from "../screens/RegisterScreen";
 import { useAuth } from "../store/AuthContext";
 import TaskListScreen from "../screens/TaskListScreen";
 import CreateTaskScreen from "../screens/CreateTaskScreen";
+import EditTaskScreen from "../screens/EditTaskScreen";
 
 export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
   Home: undefined;
   CreateTask: undefined;
+  EditTask: {
+    taskId: string;
+    title: string;
+    description?: string;
+    scheduledAt?: string;
+    deadline?: string;
+    priority: TaskPriority;
+    category?: string;
+  };
 };
 
 const Stack =
@@ -62,6 +74,13 @@ const AppNavigator = () => {
                 title: "Create Task",
               }}
             />
+            <Stack.Screen
+  name="EditTask"
+  component={EditTaskScreen}
+  options={{
+    title: "Edit Task",
+  }}
+/>
           </>
         ) : (
           <>
