@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import {
   Alert,
   Button,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -9,6 +10,9 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import DateTimePicker, {
+  DateTimePickerEvent,
+} from "@react-native-community/datetimepicker";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import {
   TaskPriority,
@@ -37,6 +41,8 @@ type Props = NativeStackScreenProps<
   "EditTask"
 >;
 
+type PickerType = "scheduledAt" | "deadline" | null;
+
 const EditTaskScreen = ({
   route,
   navigation,
@@ -48,18 +54,67 @@ const EditTaskScreen = ({
   const [description, setDescription] = useState(
     task.description ?? ""
   );
-  const [scheduledAt, setScheduledAt] = useState(
-    task.scheduledAt ?? ""
+
+  const [scheduledAt, setScheduledAt] = useState<Date | null>(
+    task.scheduledAt ? new Date(task.scheduledAt) : null
   );
-  const [deadline, setDeadline] = useState(
-    task.deadline ?? ""
+
+  const [deadline, setDeadline] = useState<Date | null>(
+    task.deadline ? new Date(task.deadline) : null
   );
+
+  const [pickerType, setPickerType] =
+    useState<PickerType>(null);
+
   const [priority, setPriority] =
     useState<TaskPriority>(task.priority);
+
   const [category, setCategory] = useState(
     task.category ?? ""
   );
+
   const [submitting, setSubmitting] = useState(false);
+
+  const openPicker = (type: PickerType) => {
+    setPickerType(type);
+  };
+
+  const handlePickerChange = (
+    event: DateTimePickerEvent,
+    selectedDate?: Date
+  ) => {
+    if (Platform.OS === "android") {
+      setPickerType(null);
+    }
+
+    if (event.type === "dismissed" || !selectedDate) {
+      return;
+    }
+
+    if (pickerType === "scheduledAt") {
+      setScheduledAt(selectedDate);
+    } else if (pickerType === "deadline") {
+      setDeadline(selectedDate);
+    }
+  };
+
+  const clearDate = (
+    type: "scheduledAt" | "deadline"
+  ) => {
+    if (type === "scheduledAt") {
+      setScheduledAt(null);
+    } else {
+      setDeadline(null);
+    }
+  };
+
+  const formatDateTime = (date: Date | null) => {
+    if (!date) {
+      return "Not selected";
+    }
+
+    return date.toLocaleString();
+  };
 
   const handleUpdate = async () => {
     if (!token) {
@@ -80,9 +135,12 @@ const EditTaskScreen = ({
       await updateTask(token, task.taskId, {
         title: title.trim(),
         description: description.trim() || undefined,
-        scheduledAt:
-          scheduledAt.trim() || undefined,
-        deadline: deadline.trim() || undefined,
+        scheduledAt: scheduledAt
+          ? scheduledAt.toISOString()
+          : undefined,
+        deadline: deadline
+          ? deadline.toISOString()
+          : undefined,
         priority,
         category: category.trim() || undefined,
       });
@@ -144,25 +202,64 @@ const EditTaskScreen = ({
         Scheduled At
       </Text>
 
-      <TextInput
-        style={styles.input}
-        value={scheduledAt}
-        onChangeText={setScheduledAt}
-        placeholder="2026-10-03T18:00:00.000Z"
-        autoCapitalize="none"
-      />
+      <TouchableOpacity
+        style={styles.dateButton}
+        onPress={() => openPicker("scheduledAt")}
+      >
+        <Text style={styles.dateButtonText}>
+          {scheduledAt
+            ? formatDateTime(scheduledAt)
+            : "Select scheduled date & time"}
+        </Text>
+      </TouchableOpacity>
+
+      {scheduledAt && (
+        <TouchableOpacity
+          onPress={() => clearDate("scheduledAt")}
+        >
+          <Text style={styles.clearText}>
+            Clear scheduled time
+          </Text>
+        </TouchableOpacity>
+      )}
 
       <Text style={styles.label}>
         Deadline
       </Text>
 
-      <TextInput
-        style={styles.input}
-        value={deadline}
-        onChangeText={setDeadline}
-        placeholder="2026-10-05T23:59:59.000Z"
-        autoCapitalize="none"
-      />
+      <TouchableOpacity
+        style={styles.dateButton}
+        onPress={() => openPicker("deadline")}
+      >
+        <Text style={styles.dateButtonText}>
+          {deadline
+            ? formatDateTime(deadline)
+            : "Select deadline date & time"}
+        </Text>
+      </TouchableOpacity>
+
+      {deadline && (
+        <TouchableOpacity
+          onPress={() => clearDate("deadline")}
+        >
+          <Text style={styles.clearText}>
+            Clear deadline
+          </Text>
+        </TouchableOpacity>
+      )}
+
+      {pickerType && (
+        <DateTimePicker
+          value={
+            pickerType === "scheduledAt"
+              ? scheduledAt || new Date()
+              : deadline || new Date()
+          }
+          mode="datetime"
+          display="default"
+          onChange={handlePickerChange}
+        />
+      )}
 
       <Text style={styles.label}>
         Priority
@@ -252,6 +349,24 @@ const styles = StyleSheet.create({
   textArea: {
     minHeight: 100,
     textAlignVertical: "top",
+  },
+  dateButton: {
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#d0d5dd",
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 15,
+  },
+  dateButtonText: {
+    fontSize: 15,
+    color: "#333",
+  },
+  clearText: {
+    color: "#d32f2f",
+    fontSize: 13,
+    fontWeight: "600",
+    marginTop: 7,
   },
   priorityRow: {
     flexDirection: "row",
