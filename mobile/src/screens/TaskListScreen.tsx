@@ -42,7 +42,22 @@ const TaskListScreen = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+    type FilterType =
+    | "all"
+    | "active"
+    | "completed"
+    | "high";
 
+    type SortType =
+    | "newest"
+    | "deadline"
+    | "priority";
+
+    const [filter, setFilter] =
+    useState<FilterType>("all");
+
+    const [sortBy, setSortBy] =
+    useState<SortType>("newest");
   const loadTasks = async () => {
     if (!token) {
       return;
@@ -140,6 +155,52 @@ const TaskListScreen = () => {
       ]
     );
   };
+  const visibleTasks = [...tasks]
+  .filter((task) => {
+    if (filter === "active") {
+      return !task.completed;
+    }
+
+    if (filter === "completed") {
+      return task.completed;
+    }
+
+    if (filter === "high") {
+      return task.priority === "high";
+    }
+
+    return true;
+  })
+  .sort((a, b) => {
+    if (sortBy === "deadline") {
+      if (!a.deadline && !b.deadline) return 0;
+      if (!a.deadline) return 1;
+      if (!b.deadline) return -1;
+
+      return (
+        new Date(a.deadline).getTime() -
+        new Date(b.deadline).getTime()
+      );
+    }
+
+    if (sortBy === "priority") {
+      const priorityOrder = {
+        high: 0,
+        medium: 1,
+        low: 2,
+      };
+
+      return (
+        priorityOrder[a.priority] -
+        priorityOrder[b.priority]
+      );
+    }
+
+    return (
+      new Date(b.createdAt).getTime() -
+      new Date(a.createdAt).getTime()
+    );
+  });
   const renderTask = ({
     item,
     }: {
@@ -252,7 +313,7 @@ const TaskListScreen = () => {
   return (
     <View style={styles.container}>
       <FlatList
-        data={tasks}
+        data={visibleTasks}
         keyExtractor={(item) => item._id}
         renderItem={renderTask}
         refreshControl={
@@ -262,48 +323,96 @@ const TaskListScreen = () => {
           />
         }
         contentContainerStyle={
-          tasks.length === 0
-            ? styles.emptyContainer
-            : styles.list
-        }
+            visibleTasks.length === 0
+                ? styles.emptyContainer
+                : styles.list
+            }
         ListHeaderComponent={
-          <View style={styles.header}>
-            <View>
-              <Text style={styles.title}>
-                My Tasks
-              </Text>
+          <View>
+            <View style={styles.header}>
+              <View>
+                <Text style={styles.title}>My Tasks</Text>
+                <Text style={styles.count}>
+                  {tasks.length} {tasks.length === 1 ? "task" : "tasks"}
+                </Text>
+              </View>
 
-              <Text style={styles.count}>
-                {tasks.length}{" "}
-                {tasks.length === 1
-                  ? "task"
-                  : "tasks"}
-              </Text>
+              <View style={styles.headerActions}>
+                <TouchableOpacity onPress={() => navigation.navigate("CreateTask")}>
+                  <Text style={styles.addButton}>+ Add</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity onPress={logout}>
+                  <Text style={styles.logout}>Logout</Text>
+                </TouchableOpacity>
+              </View>
             </View>
 
-            <View style={styles.headerActions}>
-            <TouchableOpacity
-                onPress={() =>
-                navigation.navigate("CreateTask")
-                }
-            >
-                <Text style={styles.addButton}>+ Add</Text>
-            </TouchableOpacity>
+            <View style={styles.filterRow}>
+              {(["all", "active", "completed", "high"] as FilterType[]).map(
+                (option) => (
+                  <TouchableOpacity
+                    key={option}
+                    style={[
+                      styles.filterButton,
+                      filter === option && styles.filterButtonActive,
+                    ]}
+                    onPress={() => setFilter(option)}
+                  >
+                    <Text
+                      style={[
+                        styles.filterText,
+                        filter === option && styles.filterTextActive,
+                      ]}
+                    >
+                      {option === "all"
+                        ? "All"
+                        : option === "active"
+                        ? "Active"
+                        : option === "completed"
+                        ? "Completed"
+                        : "High"}
+                    </Text>
+                  </TouchableOpacity>
+                )
+              )}
+            </View>
 
-            <TouchableOpacity onPress={logout}>
-                <Text style={styles.logout}>Logout</Text>
-            </TouchableOpacity>
+            <View style={styles.sortRow}>
+              <Text style={styles.sortLabel}>Sort:</Text>
+
+              {(["newest", "deadline", "priority"] as SortType[]).map((option) => (
+                <TouchableOpacity
+                  key={option}
+                  onPress={() => setSortBy(option)}
+                >
+                  <Text
+                    style={[
+                      styles.sortButton,
+                      sortBy === option && styles.sortButtonActive,
+                    ]}
+                  >
+                    {option === "newest"
+                      ? "Newest"
+                      : option === "deadline"
+                      ? "Deadline"
+                      : "Priority"}
+                  </Text>
+                </TouchableOpacity>
+              ))}
             </View>
           </View>
         }
         ListEmptyComponent={
           <View style={styles.empty}>
             <Text style={styles.emptyTitle}>
-              No tasks yet
+              {tasks.length === 0 ? "No tasks yet" : "No matching tasks"}
             </Text>
 
             <Text style={styles.emptyText}>
-              Create your first task to get started.
+              {tasks.length === 0
+                ? "Create your first task to get started."
+                : "Try changing your filter or sorting option."}
             </Text>
           </View>
         }
@@ -435,14 +544,56 @@ const styles = StyleSheet.create({
     color: "#666",
   },
   headerActions: {
-  flexDirection: "row",
-  alignItems: "center",
-  gap: 16,
-},
-addButton: {
-  fontWeight: "700",
-  fontSize: 15,
-},
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
+  },
+  addButton: {
+    fontWeight: "700",
+    fontSize: 15,
+  },
+  filterRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginBottom: 12,
+  },
+  filterButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 20,
+    backgroundColor: "#e9edf3",
+  },
+  filterButtonActive: {
+    backgroundColor: "#222",
+  },
+  filterText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#555",
+  },
+  filterTextActive: {
+    color: "#fff",
+  },
+  sortRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    marginBottom: 16,
+  },
+  sortLabel: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#555",
+  },
+  sortButton: {
+    fontSize: 13,
+    color: "#777",
+  },
+  sortButtonActive: {
+    color: "#222",
+    fontWeight: "700",
+  },
 });
 
 export default TaskListScreen;
