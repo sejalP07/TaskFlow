@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
-  Button,
+  KeyboardAvoidingView,
   Platform,
   ScrollView,
   StyleSheet,
@@ -32,7 +33,10 @@ type Props = NativeStackScreenProps<
   "CreateTask"
 >;
 
-type PickerType = "scheduledAt" | "deadline" | null;
+type PickerType =
+  | "scheduledAt"
+  | "deadline"
+  | null;
 
 const CreateTaskScreen = ({
   navigation,
@@ -40,12 +44,14 @@ const CreateTaskScreen = ({
   const { token } = useAuth();
 
   const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
+  const [description, setDescription] =
+    useState("");
 
-  const [scheduledAt, setScheduledAt] = useState<Date | null>(
-    null
-  );
-  const [deadline, setDeadline] = useState<Date | null>(null);
+  const [scheduledAt, setScheduledAt] =
+    useState<Date | null>(null);
+
+  const [deadline, setDeadline] =
+    useState<Date | null>(null);
 
   const [pickerType, setPickerType] =
     useState<PickerType>(null);
@@ -53,8 +59,11 @@ const CreateTaskScreen = ({
   const [priority, setPriority] =
     useState<TaskPriority>("medium");
 
-  const [category, setCategory] = useState("");
-  const [submitting, setSubmitting] = useState(false);
+  const [category, setCategory] =
+    useState("");
+
+  const [submitting, setSubmitting] =
+    useState(false);
 
   const openPicker = (type: PickerType) => {
     setPickerType(type);
@@ -68,7 +77,10 @@ const CreateTaskScreen = ({
       setPickerType(null);
     }
 
-    if (event.type === "dismissed" || !selectedDate) {
+    if (
+      event.type === "dismissed" ||
+      !selectedDate
+    ) {
       return;
     }
 
@@ -77,18 +89,11 @@ const CreateTaskScreen = ({
     } else if (pickerType === "deadline") {
       setDeadline(selectedDate);
     }
-
-    // On iOS, keep the picker open until the user finishes.
-    if (Platform.OS === "ios") {
-      if (pickerType === "scheduledAt") {
-        setScheduledAt(selectedDate);
-      } else if (pickerType === "deadline") {
-        setDeadline(selectedDate);
-      }
-    }
   };
 
-  const clearDate = (type: "scheduledAt" | "deadline") => {
+  const clearDate = (
+    type: "scheduledAt" | "deadline"
+  ) => {
     if (type === "scheduledAt") {
       setScheduledAt(null);
     } else {
@@ -96,7 +101,9 @@ const CreateTaskScreen = ({
     }
   };
 
-  const formatDateTime = (date: Date | null) => {
+  const formatDateTime = (
+    date: Date | null
+  ) => {
     if (!date) {
       return "Not selected";
     }
@@ -138,7 +145,8 @@ const CreateTaskScreen = ({
     if (
       scheduledAt &&
       deadline &&
-      deadline.getTime() < scheduledAt.getTime()
+      deadline.getTime() <
+        scheduledAt.getTime()
     ) {
       Alert.alert(
         "Validation",
@@ -152,7 +160,8 @@ const CreateTaskScreen = ({
 
       await createTask(token, {
         title: title.trim(),
-        description: description.trim() || undefined,
+        description:
+          description.trim() || undefined,
         scheduledAt: scheduledAt
           ? scheduledAt.toISOString()
           : undefined,
@@ -160,7 +169,8 @@ const CreateTaskScreen = ({
           ? deadline.toISOString()
           : undefined,
         priority,
-        category: category.trim() || undefined,
+        category:
+          category.trim() || undefined,
       });
 
       Alert.alert(
@@ -183,148 +193,241 @@ const CreateTaskScreen = ({
       setSubmitting(false);
     }
   };
+
   return (
-    <ScrollView
+    <KeyboardAvoidingView
       style={styles.container}
-      contentContainerStyle={styles.content}
-      keyboardShouldPersistTaps="handled"
+      behavior={
+        Platform.OS === "ios"
+          ? "padding"
+          : undefined
+      }
     >
-      <Text style={styles.heading}>
-        Create New Task
-      </Text>
-
-      <Text style={styles.label}>Title *</Text>
-
-      <TextInput
-        style={styles.input}
-        placeholder="e.g. Complete assignment"
-        value={title}
-        onChangeText={setTitle}
-      />
-
-      <Text style={styles.label}>Description</Text>
-
-      <TextInput
-        style={[styles.input, styles.textArea]}
-        placeholder="Add task details"
-        value={description}
-        onChangeText={setDescription}
-        multiline
-        numberOfLines={4}
-      />
-
-      <Text style={styles.label}>
-        Scheduled At
-      </Text>
-
-      <TouchableOpacity
-        style={styles.dateButton}
-        onPress={() => openPicker("scheduledAt")}
+      <ScrollView
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.dateButtonText}>
-          {scheduledAt
-            ? formatDateTime(scheduledAt)
-            : "Select scheduled date & time"}
-        </Text>
-      </TouchableOpacity>
-
-      {scheduledAt && (
-        <TouchableOpacity
-          onPress={() => clearDate("scheduledAt")}
-        >
-          <Text style={styles.clearText}>
-            Clear scheduled time
+        <View style={styles.header}>
+          <Text style={styles.heading}>
+            Create New Task
           </Text>
-        </TouchableOpacity>
-      )}
 
-      <Text style={styles.label}>
-        Deadline
-      </Text>
-
-      <TouchableOpacity
-        style={styles.dateButton}
-        onPress={() => openPicker("deadline")}
-      >
-        <Text style={styles.dateButtonText}>
-          {deadline
-            ? formatDateTime(deadline)
-            : "Select deadline date & time"}
-        </Text>
-      </TouchableOpacity>
-
-      {deadline && (
-        <TouchableOpacity
-          onPress={() => clearDate("deadline")}
-        >
-          <Text style={styles.clearText}>
-            Clear deadline
+          <Text style={styles.subtitle}>
+            Add the details and stay on top of your work.
           </Text>
-        </TouchableOpacity>
-      )}
+        </View>
 
-      {pickerType && (
-        <DateTimePicker
-          value={
-            pickerType === "scheduledAt"
-              ? scheduledAt || new Date()
-              : deadline || new Date()
-          }
-          mode="datetime"
-          display="default"
-          onChange={handlePickerChange}
-        />
-      )}
+        <View style={styles.formCard}>
+          <Text style={styles.sectionTitle}>
+            Task Details
+          </Text>
 
-      <Text style={styles.label}>Priority</Text>
+          <Text style={styles.label}>
+            Title *
+          </Text>
 
-      <View style={styles.priorityRow}>
-        {(["low", "medium", "high"] as TaskPriority[]).map(
-          (item) => (
+          <TextInput
+            style={styles.input}
+            placeholder="e.g. Complete assignment"
+            placeholderTextColor="#999"
+            value={title}
+            onChangeText={setTitle}
+            maxLength={200}
+          />
+
+          <Text style={styles.characterHint}>
+            {title.length}/200
+          </Text>
+
+          <Text style={styles.label}>
+            Description
+          </Text>
+
+          <TextInput
+            style={[
+              styles.input,
+              styles.textArea,
+            ]}
+            placeholder="Add task details"
+            placeholderTextColor="#999"
+            value={description}
+            onChangeText={setDescription}
+            multiline
+            numberOfLines={4}
+            maxLength={2000}
+          />
+
+          <Text style={styles.label}>
+            Schedule
+          </Text>
+
+          <TouchableOpacity
+            style={styles.dateButton}
+            onPress={() =>
+              openPicker("scheduledAt")
+            }
+            activeOpacity={0.8}
+          >
+            <Text style={styles.dateIcon}>
+              📅
+            </Text>
+
+            <View style={styles.dateContent}>
+              <Text style={styles.dateTitle}>
+                Scheduled At
+              </Text>
+
+              <Text style={styles.dateValue}>
+                {scheduledAt
+                  ? formatDateTime(scheduledAt)
+                  : "Select date & time"}
+              </Text>
+            </View>
+          </TouchableOpacity>
+
+          {scheduledAt && (
             <TouchableOpacity
-              key={item}
-              style={[
-                styles.priorityButton,
-                priority === item &&
-                  styles.prioritySelected,
-              ]}
-              onPress={() => setPriority(item)}
+              onPress={() =>
+                clearDate("scheduledAt")
+              }
             >
-              <Text
-                style={[
-                  styles.priorityText,
-                  priority === item &&
-                    styles.priorityTextSelected,
-                ]}
-              >
-                {item.toUpperCase()}
+              <Text style={styles.clearText}>
+                Clear scheduled time
               </Text>
             </TouchableOpacity>
-          )
-        )}
-      </View>
+          )}
 
-      <Text style={styles.label}>Category</Text>
+          <TouchableOpacity
+            style={styles.dateButton}
+            onPress={() =>
+              openPicker("deadline")
+            }
+            activeOpacity={0.8}
+          >
+            <Text style={styles.dateIcon}>
+              ⏰
+            </Text>
 
-      <TextInput
-        style={styles.input}
-        placeholder="e.g. Development"
-        value={category}
-        onChangeText={setCategory}
-      />
+            <View style={styles.dateContent}>
+              <Text style={styles.dateTitle}>
+                Deadline
+              </Text>
 
-      <View style={styles.buttonContainer}>
-        <Button
-          title={
-            submitting
-              ? "Creating..."
-              : "Create Task"
-          }
+              <Text style={styles.dateValue}>
+                {deadline
+                  ? formatDateTime(deadline)
+                  : "Select deadline"}
+              </Text>
+            </View>
+          </TouchableOpacity>
+
+          {deadline && (
+            <TouchableOpacity
+              onPress={() =>
+                clearDate("deadline")
+              }
+            >
+              <Text style={styles.clearText}>
+                Clear deadline
+              </Text>
+            </TouchableOpacity>
+          )}
+
+          {pickerType && (
+            <DateTimePicker
+              value={
+                pickerType === "scheduledAt"
+                  ? scheduledAt || new Date()
+                  : deadline || new Date()
+              }
+              mode="datetime"
+              display="default"
+              onChange={handlePickerChange}
+            />
+          )}
+
+          <Text style={styles.label}>
+            Priority
+          </Text>
+
+          <View style={styles.priorityRow}>
+            {(
+              [
+                "low",
+                "medium",
+                "high",
+              ] as TaskPriority[]
+            ).map((item) => (
+              <TouchableOpacity
+                key={item}
+                style={[
+                  styles.priorityButton,
+                  priority === item &&
+                    styles.prioritySelected,
+                ]}
+                onPress={() =>
+                  setPriority(item)
+                }
+                activeOpacity={0.8}
+              >
+                <Text
+                  style={[
+                    styles.priorityText,
+                    priority === item &&
+                      styles.priorityTextSelected,
+                  ]}
+                >
+                  {item.toUpperCase()}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <Text style={styles.label}>
+            Category
+          </Text>
+
+          <TextInput
+            style={styles.input}
+            placeholder="e.g. Development"
+            placeholderTextColor="#999"
+            value={category}
+            onChangeText={setCategory}
+            maxLength={50}
+          />
+        </View>
+
+        <TouchableOpacity
+          style={[
+            styles.createButton,
+            submitting &&
+              styles.createButtonDisabled,
+          ]}
           onPress={handleCreateTask}
           disabled={submitting}
-        />
-      </View>
-    </ScrollView>
+          activeOpacity={0.8}
+        >
+          {submitting ? (
+            <>
+              <ActivityIndicator color="#fff" />
+
+              <Text style={styles.buttonText}>
+                Creating...
+              </Text>
+            </>
+          ) : (
+            <Text style={styles.buttonText}>
+              Create Task
+            </Text>
+          )}
+        </TouchableOpacity>
+
+        <Text style={styles.footerText}>
+          You can edit these details later.
+        </Text>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -337,47 +440,93 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingBottom: 40,
   },
+  header: {
+    marginBottom: 20,
+  },
   heading: {
-    fontSize: 28,
-    fontWeight: "700",
-    marginBottom: 24,
+    fontSize: 30,
+    fontWeight: "800",
+    color: "#222",
+  },
+  subtitle: {
+    marginTop: 7,
+    color: "#666",
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  formCard: {
+    backgroundColor: "#fff",
+    borderRadius: 18,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: "#edf0f4",
+  },
+  sectionTitle: {
+    fontSize: 17,
+    fontWeight: "800",
+    color: "#222",
+    marginBottom: 4,
   },
   label: {
-    fontSize: 15,
-    fontWeight: "600",
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#333",
+    marginTop: 18,
     marginBottom: 8,
-    marginTop: 16,
   },
   input: {
-    backgroundColor: "#fff",
+    height: 52,
+    backgroundColor: "#fafbfc",
     borderWidth: 1,
     borderColor: "#d0d5dd",
     borderRadius: 10,
     paddingHorizontal: 14,
-    paddingVertical: 13,
     fontSize: 15,
+    color: "#222",
   },
   textArea: {
-    minHeight: 100,
+    minHeight: 110,
+    paddingTop: 14,
     textAlignVertical: "top",
   },
+  characterHint: {
+    fontSize: 11,
+    color: "#999",
+    textAlign: "right",
+    marginTop: 4,
+  },
   dateButton: {
-    backgroundColor: "#fff",
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fafbfc",
     borderWidth: 1,
     borderColor: "#d0d5dd",
     borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 15,
+    padding: 14,
+    marginBottom: 8,
   },
-  dateButtonText: {
-    fontSize: 15,
-    color: "#333",
+  dateIcon: {
+    fontSize: 21,
+    marginRight: 12,
+  },
+  dateContent: {
+    flex: 1,
+  },
+  dateTitle: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#666",
+    marginBottom: 3,
+  },
+  dateValue: {
+    fontSize: 14,
+    color: "#222",
   },
   clearText: {
     color: "#d32f2f",
-    fontSize: 13,
-    fontWeight: "600",
-    marginTop: 7,
+    fontSize: 12,
+    fontWeight: "700",
+    marginBottom: 4,
   },
   priorityRow: {
     flexDirection: "row",
@@ -385,26 +534,48 @@ const styles = StyleSheet.create({
   },
   priorityButton: {
     flex: 1,
-    paddingVertical: 12,
+    paddingVertical: 13,
     borderWidth: 1,
     borderColor: "#d0d5dd",
-    borderRadius: 8,
+    borderRadius: 10,
     alignItems: "center",
-    backgroundColor: "#fff",
+    backgroundColor: "#fafbfc",
   },
   prioritySelected: {
     backgroundColor: "#222",
     borderColor: "#222",
   },
   priorityText: {
-    fontSize: 12,
-    fontWeight: "700",
+    fontSize: 11,
+    fontWeight: "800",
+    color: "#555",
   },
   priorityTextSelected: {
     color: "#fff",
   },
-  buttonContainer: {
-    marginTop: 28,
+  createButton: {
+    minHeight: 54,
+    borderRadius: 12,
+    backgroundColor: "#222",
+    marginTop: 18,
+    justifyContent: "center",
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 10,
+  },
+  createButtonDisabled: {
+    opacity: 0.65,
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "800",
+  },
+  footerText: {
+    textAlign: "center",
+    color: "#999",
+    fontSize: 12,
+    marginTop: 12,
   },
 });
 
