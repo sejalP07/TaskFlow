@@ -117,6 +117,36 @@ const CreateTaskScreen = ({
       return;
     }
 
+    const now = new Date();
+
+    if (scheduledAt && scheduledAt < now) {
+      Alert.alert(
+        "Validation",
+        "Scheduled time cannot be in the past."
+      );
+      return;
+    }
+
+    if (deadline && deadline < now) {
+      Alert.alert(
+        "Validation",
+        "Deadline cannot be in the past."
+      );
+      return;
+    }
+
+    if (
+      scheduledAt &&
+      deadline &&
+      deadline.getTime() < scheduledAt.getTime()
+    ) {
+      Alert.alert(
+        "Validation",
+        "Deadline cannot be earlier than the scheduled time."
+      );
+      return;
+    }
+
     try {
       setSubmitting(true);
 
@@ -153,7 +183,6 @@ const CreateTaskScreen = ({
       setSubmitting(false);
     }
   };
-
   return (
     <ScrollView
       style={styles.container}

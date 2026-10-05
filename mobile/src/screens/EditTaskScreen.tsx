@@ -117,54 +117,84 @@ const EditTaskScreen = ({
   };
 
   const handleUpdate = async () => {
-    if (!token) {
-      return;
-    }
+  if (!token) {
+    return;
+  }
 
-    if (!title.trim()) {
-      Alert.alert(
-        "Validation",
-        "Please enter a task title."
-      );
-      return;
-    }
+  if (!title.trim()) {
+    Alert.alert(
+      "Validation",
+      "Please enter a task title."
+    );
+    return;
+  }
 
-    try {
-      setSubmitting(true);
+  const now = new Date();
 
-      await updateTask(token, task.taskId, {
-        title: title.trim(),
-        description: description.trim() || undefined,
-        scheduledAt: scheduledAt
-          ? scheduledAt.toISOString()
-          : undefined,
-        deadline: deadline
-          ? deadline.toISOString()
-          : undefined,
-        priority,
-        category: category.trim() || undefined,
-      });
+  if (scheduledAt && scheduledAt < now) {
+    Alert.alert(
+      "Validation",
+      "Scheduled time cannot be in the past."
+    );
+    return;
+  }
 
-      Alert.alert(
-        "Success",
-        "Task updated successfully.",
-        [
-          {
-            text: "OK",
-            onPress: () => navigation.goBack(),
-          },
-        ]
-      );
-    } catch (error: any) {
-      Alert.alert(
-        "Error",
-        error?.response?.data?.message ||
-          "Unable to update task."
-      );
-    } finally {
-      setSubmitting(false);
-    }
-  };
+  if (deadline && deadline < now) {
+    Alert.alert(
+      "Validation",
+      "Deadline cannot be in the past."
+    );
+    return;
+  }
+
+  if (
+    scheduledAt &&
+    deadline &&
+    deadline.getTime() < scheduledAt.getTime()
+  ) {
+    Alert.alert(
+      "Validation",
+      "Deadline cannot be earlier than the scheduled time."
+    );
+    return;
+  }
+
+  try {
+    setSubmitting(true);
+
+    await updateTask(token, task.taskId, {
+      title: title.trim(),
+      description: description.trim() || undefined,
+      scheduledAt: scheduledAt
+        ? scheduledAt.toISOString()
+        : undefined,
+      deadline: deadline
+        ? deadline.toISOString()
+        : undefined,
+      priority,
+      category: category.trim() || undefined,
+    });
+
+    Alert.alert(
+      "Success",
+      "Task updated successfully.",
+      [
+        {
+          text: "OK",
+          onPress: () => navigation.goBack(),
+        },
+      ]
+    );
+  } catch (error: any) {
+    Alert.alert(
+      "Error",
+      error?.response?.data?.message ||
+        "Unable to update task."
+    );
+  } finally {
+    setSubmitting(false);
+  }
+};
 
   return (
     <ScrollView
